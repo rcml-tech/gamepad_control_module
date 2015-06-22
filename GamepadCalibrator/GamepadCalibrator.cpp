@@ -309,10 +309,10 @@ int main(){
 		++i)
 	{
 		long temp = 0;
-		temp = ini.GetLongValue("buttons", (*i).c_str(), 0);
+		temp = ini.GetLongValue("axis", (*i).c_str(), 0);
 
-		ini.Delete("buttons", (*i).c_str(), true);
-		ini.SetValue("buttons", (*i).c_str(), std::to_string(ArrayOfPositions[countPairs]).c_str());
+		ini.Delete("axis", (*i).c_str(), true);
+		ini.SetValue("axis", (*i).c_str(), std::to_string(ArrayOfPositions[countPairs]).c_str());
 
 		ini.Delete((*i).c_str(), "upper_value", true);
 		ini.Delete((*i).c_str(), "lower_value", true);

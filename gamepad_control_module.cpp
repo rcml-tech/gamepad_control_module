@@ -306,7 +306,7 @@ void GamepadControlModule::prepare(colorPrintf_t *colorPrintf_p, colorPrintfVA_t
 	}
 
 	CSimpleIniA::TNamesDepend axis_names_ini;
-	ini.GetAllKeys("buttons", axis_names_ini);
+	ini.GetAllKeys("axis", axis_names_ini);
 	axis_id++;
 	for (
 		CSimpleIniA::TNamesDepend::const_iterator i = axis_names_ini.begin();
@@ -314,7 +314,7 @@ void GamepadControlModule::prepare(colorPrintf_t *colorPrintf_p, colorPrintfVA_t
 		++i)
 	{
 		long temp = 0;
-		temp = ini.GetLongValue("buttons", i->pItem, 0);
+		temp = ini.GetLongValue("axis", i->pItem, 0);
 
 		if (temp){
 			std::string col_axis(i->pItem);
