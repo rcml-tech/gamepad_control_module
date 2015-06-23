@@ -4,8 +4,6 @@
 
 class GamepadControlModule : public ControlModule {
 	AxisData **Gamepad_axis;
-	//unsigned int COUNT_AXIS;
-	colorPrintf_t *colorPrintf;
 
 	std::map<std::string, system_value> axis_names;
 	std::map<int, std::string> axis_bind_map;
@@ -13,6 +11,8 @@ class GamepadControlModule : public ControlModule {
 
 	LPDIRECTINPUTDEVICE8W joystick;
 	DIJOYSTATE JState;
+
+	colorPrintfVA_t *colorPrintf_p;
 
 public:
 	GamepadControlModule(){};
@@ -40,6 +40,8 @@ public:
 	//destructor
 	void destroy();
 	~GamepadControlModule() {}
+
+	void colorPrintf(ConsoleColor colors, const char *mask, ...);
 };
 
 #endif	/* Gamepad_CONTROL_MODULE_H */
