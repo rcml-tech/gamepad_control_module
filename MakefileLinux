@@ -1,0 +1,46 @@
+# Environment
+CC=g++
+CCC=g++
+CXX=g++
+
+# Constants
+MODULE_HEADERS_DIR = "/home/mike/repo/module_headers_newapi"
+SIMPLEINI_DIR = "/home/mike/repo/simpleini"
+
+INCLUDE_DIR_FLAGS = -I${MODULE_HEADERS_DIR} -I${SIMPLEINI_DIR}
+
+FLAGS_MUTUAL = -Wall -m32 -std=c++11 -fPIC ${INCLUDE_DIR_FLAGS} -MMD -MP -MF "${OBJECTDIR}/$@.d"
+
+.PHONY: debug
+
+debug: OBJECTDIR = build/Debug
+debug: FLAGS = -g ${FLAGS_MUTUAL}
+debug: FILENAME_FIX = debug
+debug: clean module
+
+release: OBJECTDIR = build/Release
+release: FLAGS = -O3 ${FLAGS_MUTUAL}
+release: FILENAME_FIX = release
+release: clean module
+
+
+clean:
+	@echo "-------------------------" 
+	rm -rf ${OBJECTDIR}
+
+joystick.o:  joystick.cpp
+	@echo "-------------------------" 
+	mkdir -p ${OBJECTDIR}
+	rm -f "${OBJECTDIR}/$@.d"
+	$(COMPILE.cc) $(FLAGS) -o ${OBJECTDIR}/joystick.o joystick.cpp
+
+gamepad_control_module.o:  gamepad_control_module.cpp
+	@echo "-------------------------" 
+	mkdir -p ${OBJECTDIR}
+	rm -f "${OBJECTDIR}/$@.d"
+	$(COMPILE.cc) $(FLAGS) -o ${OBJECTDIR}/gamepad_control_module.o gamepad_control_module.cpp
+
+module: joystick.o gamepad_control_module.o 
+	@echo "-------------------------" 
+	mkdir -p ${OBJECTDIR}
+	${LINK.cc} -m32 -shared ${OBJECTDIR}/gamepad_control_module.o ${OBJECTDIR}/joystick.o -o ${OBJECTDIR}/gamepad_module_$(FILENAME_FIX).so
