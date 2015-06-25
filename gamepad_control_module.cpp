@@ -6,8 +6,18 @@
 #include <time.h>
 #include <string>
 #include <map>
+#include <stdarg.h>
 
-#include <dinput.h>
+#include <iostream>
+
+#ifdef _WIN32
+	#include <dinput.h>
+#else
+	#include <unistd.h>
+	#include <fcntl.h>
+	#include <dlfcn.h> 
+	#include "joystick.hh"
+#endif
 
 #include <module.h>
 #include <control_module.h>
@@ -20,14 +30,14 @@ unsigned int COUNT_AXIS = 18;
 bool is_error_init = false;
 
 // All buttons
-bool is_Button_was_changed[18] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-
 #ifdef _WIN32
+	bool is_Button_was_changed[18] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 	EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 #endif
 
 // MACROSES
-#define SEND_BUTTON_CHANGE(index_of_button)\
+#ifdef _WIN32
+	#define SEND_BUTTON_CHANGE(index_of_button)\
 	if (JState.rgbButtons[index_of_button] != 0){\
 	(*sendAxisState)(index_of_button + 1, 1);\
 	is_Button_was_changed[index_of_button] = true;\
@@ -38,6 +48,8 @@ bool is_Button_was_changed[18] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 			is_Button_was_changed[index_of_button] = false;\
 		}\
 	}
+#endif
+
 
 inline const char *copyStrValue(const char *source) {
 	char *dest = new char[strlen(source) + 1];
@@ -45,13 +57,16 @@ inline const char *copyStrValue(const char *source) {
 	return dest;
 }
 
-BOOL CALLBACK callForEnumDevices(LPCDIDEVICEINSTANCE pdInst, LPVOID pvRef){
-	*((GUID *)pvRef) = (pdInst->guidInstance);
-	return DIENUM_STOP;
-}
+#ifdef _WIN32
+	BOOL CALLBACK callForEnumDevices(LPCDIDEVICEINSTANCE pdInst, LPVOID pvRef){
+		*((GUID *)pvRef) = (pdInst->guidInstance);
+		return DIENUM_STOP;
+	}
+#endif
 
 void GamepadControlModule::execute(sendAxisState_t sendAxisState) {
-	srand(time(NULL));
+	//srand(time(NULL));
+#ifdef _WIN32	
 	HRESULT hr;
 	if (FAILED(hr = joystick->Acquire())) {
 		return;
@@ -211,6 +226,82 @@ void GamepadControlModule::execute(sendAxisState_t sendAxisState) {
 	}
 	catch (...){}
 	joystick->Unacquire();
+#else
+	try{
+		JoystickEvent event;
+		while(true){
+			joystick->sample(&event);
+			if (!event.isInitialState()){
+				break;
+			} 
+		}
+
+		while (true)
+		{
+			// Restrict rate
+			usleep(1000);
+
+			// Attempt to sample an event from the joystick
+			if (joystick->sample(&event))
+			{
+
+				if (event.isButton())
+				{
+					switch(event.number){
+						case 0:
+						case 1:
+						case 2:
+						case 3:
+						case 4:
+						case 5:
+						case 6:
+						case 7:
+						case 8:
+						case 9:						
+						case 10:
+						case 11:
+						{
+							if (axis_bind_map.count(event.number+1)){
+								if (axis_bind_map[event.number+1] == "Exit" &&  event.value){
+									throw std::exception();
+								}
+								(*sendAxisState)(axis_names[axis_bind_map[event.number+1]], event.value);
+							}
+							break;
+						}
+						default:{ break;}
+					}
+			    }
+				else if (event.isAxis())
+				{
+					switch(event.number){
+						case 0:
+						case 1:
+						{
+							if (axis_bind_map.count(event.number + 13)){
+								(*sendAxisState)(axis_names[axis_bind_map[event.number + 13]], event.value);
+							}
+							break;
+						}
+						case 3:
+						case 4:
+						case 5:
+						case 6:
+						{
+							if (axis_bind_map.count(event.number + 12)){
+								(*sendAxisState)(axis_names[axis_bind_map[event.number + 12]], event.value);
+							}
+							break;
+						}
+						default:{ break;}
+					}
+			    }
+			}
+		}
+
+	}
+	catch(...){}
+#endif
 }
 
 
@@ -258,6 +349,17 @@ void GamepadControlModule::prepare(colorPrintf_t *colorPrintf_p, colorPrintfVA_t
 		return;
 	}
 
+#ifndef _WIN32
+	const char* tempInput;
+	tempInput = ini.GetValue("options","input_path",NULL);
+	if (tempInput == NULL) {
+		colorPrintf(ConsoleColor(ConsoleColor::yellow), "Can't recieve path to input device");
+		is_error_init = true;
+		return;
+	}
+	InputDevice.assign(tempInput);
+#endif
+
 	CSimpleIniA::TNamesDepend axis_names_ini;
 	ini.GetAllKeys("axis", axis_names_ini);
 	axis_id++;
@@ -290,7 +392,6 @@ void GamepadControlModule::prepare(colorPrintf_t *colorPrintf_p, colorPrintfVA_t
 	for (unsigned int j = 0; j < COUNT_AXIS; ++j) {
 		Gamepad_axis[j] = axis[j + 1];
 	}
-
 }
 
 int GamepadControlModule::init() {
@@ -298,7 +399,7 @@ int GamepadControlModule::init() {
 		return 1;
 	}
 
-
+#ifdef _WIN32
 	LPDIRECTINPUT8 di;
 	HRESULT hr;
 
@@ -358,7 +459,14 @@ int GamepadControlModule::init() {
 	// dead zone to Y
 	dipdw.diph.dwObj = DIJOFS_Y; // Îñü Y
 	joystick->SetProperty(DIPROP_DEADZONE, &dipdw.diph);
-
+#else
+	joystick = new Joystick(InputDevice);
+	if (!joystick->isFound())
+	{
+		colorPrintf(ConsoleColor(ConsoleColor::yellow),"Open gamepad file failed.\n");
+		return 1;
+	}
+#endif
 	return  0;
 }
 
@@ -376,7 +484,11 @@ void GamepadControlModule::destroy() {
 		delete Gamepad_axis[j];
 	}
 	delete[] Gamepad_axis;
+#ifndef _WIN32
+	//delete joystick;
+#endif
 	delete this;
+
 }
 
 void *GamepadControlModule::writePC(unsigned int *buffer_length) {

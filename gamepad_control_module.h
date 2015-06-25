@@ -9,8 +9,13 @@ class GamepadControlModule : public ControlModule {
 	std::map<int, std::string> axis_bind_map;
 	std::map<system_value, AxisData*> axis;
 
+#ifdef _WIN32
 	LPDIRECTINPUTDEVICE8W joystick;
 	DIJOYSTATE JState;
+#else
+	Joystick *joystick;
+	std::string InputDevice;
+#endif
 
 	colorPrintfVA_t *colorPrintf_p;
 
