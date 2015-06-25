@@ -1,0 +1,15 @@
+# Environment
+CC=g++
+CCC=g++
+CXX=g++
+
+# Constants
+SIMPLEINI_DIR = "/home/mike/repo/simpleini"
+
+INCLUDE_DIR_FLAGS = -I${SIMPLEINI_DIR}
+
+FLAGS_MUTUAL = -Wall -std=c++11  ${INCLUDE_DIR_FLAGS}
+
+all: 
+	g++ ${FLAGS_MUTUAL} GamepadCalibrator.cpp joystick.cpp -o Calibrator
+
