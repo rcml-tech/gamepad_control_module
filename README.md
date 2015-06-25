@@ -25,6 +25,11 @@
 - 17-18-я оси описывают крестовину(D-Pad)
 
 ```ini
+;Секция для Linux
+[options]
+input_path = /dev/input/js1
+
+;Секция для всех платформ
 [axis]
 Exit = 9
 B1 = 1
