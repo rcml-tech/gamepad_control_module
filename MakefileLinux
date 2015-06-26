@@ -1,5 +1,4 @@
 # Environment
-CC=g++
 CCC=g++
 CXX=g++
 
@@ -28,11 +27,11 @@ clean:
 	@echo "-------------------------" 
 	rm -rf ${OBJECTDIR}
 
-joystick.o:  joystick.cpp
+joystick.o:  joystick.cc
 	@echo "-------------------------" 
 	mkdir -p ${OBJECTDIR}
 	rm -f "${OBJECTDIR}/$@.d"
-	$(COMPILE.cc) $(FLAGS) -o ${OBJECTDIR}/joystick.o joystick.cpp
+	$(COMPILE.cc) $(FLAGS) -o ${OBJECTDIR}/joystick.o joystick.cc
 
 gamepad_control_module.o:  gamepad_control_module.cpp
 	@echo "-------------------------" 
