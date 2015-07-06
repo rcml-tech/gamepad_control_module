@@ -24,11 +24,6 @@
 #include <SimpleIni.h>
 #include "gamepad_control_module.h"
 
-// GLOBAL VARIABLES
-unsigned int COUNT_AXIS = 18;
-
-bool is_error_init = false;
-
 // All buttons
 #ifdef _WIN32
 	bool is_Button_was_changed[18] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };

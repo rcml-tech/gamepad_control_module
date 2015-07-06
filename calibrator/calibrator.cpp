@@ -67,9 +67,6 @@
 			ArrayOfBytesOfButtons[ARRAY_INDEX] = button_byte_position;\
 			break;\
 		}\
-		else {\
-			ArrayOfBytesOfButtons[ARRAY_INDEX] = 0;\
-		}\
 		Sleep(20); \
 	}\
 	std::cout << ArrayOfBytesOfButtons[ARRAY_INDEX] << std::endl;\
@@ -417,37 +414,11 @@ int main(int argc, char* argv[]){
 #endif	
 
 
-#ifdef _WIN32
-	WCHAR DllPath[MAX_PATH] = { 0 };
-	GetModuleFileNameW((HINSTANCE)&__ImageBase, DllPath, (DWORD)MAX_PATH);
-
-	WCHAR *tmp = wcsrchr(DllPath, L'\\');
-	WCHAR wConfigPath[MAX_PATH] = { 0 };
-
-	size_t path_len = tmp - DllPath;
-
-	wcsncpy(wConfigPath, DllPath, path_len);
-	wcscat(wConfigPath, L"\\config.ini");
-
-	char ConfigPath[MAX_PATH] = { 0 };
-	wcstombs(ConfigPath, wConfigPath, sizeof(ConfigPath));
-#else
-	char buffer[PATH_MAX] ={0};
-	char *path = realpath(argv[0],buffer); 
-	std::string str(path);
-
-	int dlfound = str.find_last_of("/");
-	str = str.substr(0, dlfound);
-	str += "/config.ini";
-
-	const char* ConfigPath = str.c_str();
-#endif
-
 	CSimpleIniA ini;
 	ini.SetMultiKey(true);
 
-	if (ini.LoadFile(ConfigPath) < 0) {
-		std::cout << "can't load config file " << ConfigPath << std::endl;
+	if (ini.LoadFile("config.ini") < 0) {
+		std::cout << "can't load config file " << std::endl;
 		return 1;
 	}
 
@@ -513,7 +484,7 @@ int main(int argc, char* argv[]){
 		countPairs++;
 	}
 
-	ini.SaveFile(ConfigPath);
+	ini.SaveFile("config.ini");
 
 	return 0;
 }

@@ -9,6 +9,10 @@ class GamepadControlModule : public ControlModule {
 	std::map<int, std::string> axis_bind_map;
 	std::map<system_value, AxisData*> axis;
 
+	unsigned int COUNT_AXIS;
+
+	bool is_error_init;
+
 #ifdef _WIN32
 	LPDIRECTINPUTDEVICE8W joystick;
 	DIJOYSTATE JState;
@@ -20,7 +24,7 @@ class GamepadControlModule : public ControlModule {
 	colorPrintfModuleVA_t *colorPrintf_p;
 
 public:
-	GamepadControlModule(){};
+	GamepadControlModule() : is_error_init(false) {};
 
 	//init
 	const char *getUID();
