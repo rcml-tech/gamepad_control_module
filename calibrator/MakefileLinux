@@ -3,8 +3,8 @@ CCC=g++
 CXX=g++
 
 # Constants
-SIMPLEINI_DIR = /var/lib/jenkins/workspace/RCML_build/simpleini/
-JOYSTICK_DIR = /home/jenkins/joystick
+SIMPLEINI_DIR = /home/mike/repo/simpleini/
+JOYSTICK_DIR = /home/mike/repo/joycpp/
 
 INCLUDE_DIR_FLAGS = -I${SIMPLEINI_DIR} -I${JOYSTICK_DIR}
 
@@ -39,4 +39,5 @@ calibrator.o: calibrator.cpp
 	$(COMPILE.cc) $(FLAGS) -o ${OBJECTDIR}/calibrator.o calibrator.cpp
 
 calibrator: calibrator.o joystick.o
-	${LINK.cc} -m32 -shared ${OBJECTDIR}/calibrator.o ${OBJECTDIR}/joystick.o -o ${OBJECTDIR}/calibrator_$(FILENAME_FIX).so
+	${LINK.cc} -m32  ${OBJECTDIR}/calibrator.o ${OBJECTDIR}/joystick.o -o ${OBJECTDIR}/calibrator_$(FILENAME_FIX).a
+
