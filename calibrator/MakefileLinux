@@ -1,0 +1,11 @@
+# Constants
+SIMPLEINI_DIR = "/var/lib/jenkins/workspace/RCML_build/simpleini/
+JOYSTICK_DIR = /home/jenkins/joystick
+
+INCLUDE_DIR_FLAGS = -I${SIMPLEINI_DIR}
+
+FLAGS_MUTUAL = -Wall -std=c++11 ${INCLUDE_DIR_FLAGS}
+
+all: calibrator.cpp ${JOYSTICK_DIR}/joystick.cc
+	g++ ${FLAGS_MUTUAL} calibrator.cpp ${JOYSTICK_DIR}/joystick.cc -o calibrator
+
