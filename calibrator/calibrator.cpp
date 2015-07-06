@@ -26,56 +26,28 @@
 // GLOBAL_VARIABLES
 #ifdef _WIN32
 	EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+	long zero_sticks_positions[4];
 
-	// Ôóíêöèÿ äëÿ EnumDevices
+	// EnumDevices
 	BOOL CALLBACK callForEnumDevices(LPCDIDEVICEINSTANCE pdInst, LPVOID pvRef);
 
-	DWORD WINAPI ThreadKeyboardScanner(PVOID pvParam){
-
-		HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
-		DWORD fdwSaveOldMode;
-
-		if (hStdin == INVALID_HANDLE_VALUE) {
-			throw std::exception();
-		}
-
-		if (!GetConsoleMode(hStdin, &fdwSaveOldMode)) {
-			throw std::exception(); //error
-		}
-
-		DWORD fdwMode = ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT;
-		if (!SetConsoleMode(hStdin, fdwMode)) {
-			throw std::exception(); //error
-		}
-
-		INPUT_RECORD irInBuf[128];
-		DWORD cNumRead;
-
-		while (true)
-		{
-			if (!ReadConsoleInput(hStdin, irInBuf, 128, &cNumRead))  {
-				throw std::exception(); //error
-			}
-			for (int i = 0; i < cNumRead; ++i) {
-				if (irInBuf[i].EventType == KEY_EVENT) {		
-					*((bool *)pvParam) = true;
-					break;
-				}
-			}
-		}
-		
-		return(0);
-	};
-
-
 	// MACRO
+	#define ZERO_CALIBRATION(STRING_MESSAGE) \
+		std::cout << STRING_MESSAGE << std::endl; \
+		Sleep(2500); \
+		joystick->Poll(); \
+		joystick->GetDeviceState(sizeof(JState), &JState); \
+		zero_sticks_positions[0] = JState.lRz; \
+		zero_sticks_positions[1] = JState.lX; \
+		zero_sticks_positions[2] = JState.lY; \
+		zero_sticks_positions[3] = JState.lZ; \
+		Sleep(500);
+
+
 	#define CALIBRATE_BUTTONS(STRING_MESSAGE,ARRAY_INDEX) \
 	std::cout << STRING_MESSAGE << std::endl; \
-	while (true) \
+	for (int j=0;j<300;j++) \
 	{ \
-		if (MessageFromThread){ \
-			MessageFromThread = !MessageFromThread; \
-		} \
 		joystick->Poll(); \
 		joystick->GetDeviceState(sizeof(JState), &JState); \
 	 \
@@ -95,10 +67,10 @@
 			ArrayOfBytesOfButtons[ARRAY_INDEX] = button_byte_position;\
 			break;\
 		}\
-		else if (MessageFromThread){\
+		else {\
 			ArrayOfBytesOfButtons[ARRAY_INDEX] = 0;\
-			break;\
 		}\
+		Sleep(20); \
 	}\
 	std::cout << ArrayOfBytesOfButtons[ARRAY_INDEX] << std::endl;\
 	Sleep(500);
@@ -107,35 +79,31 @@
 
 	#define CALIBRATE_STICKS(STRING_MESSAGE,ARRAY_INDEX) \
 		std::cout << STRING_MESSAGE << std::endl; \
-		while (true) \
+		for (int j=0;j<7;j++)  \
 		{ \
-			if (MessageFromThread){ \
-				MessageFromThread = !MessageFromThread; \
-			} \
-	 \
 			Sleep(1000); \
 			joystick->Poll(); \
 			joystick->GetDeviceState(sizeof(JState), &JState); \
 	 \
-			if (JState.lRz != 32767){ \
+			if (JState.lRz != zero_sticks_positions[0]){ \
 				ArrayOfValuseOfSticks[ARRAY_INDEX] = JState.lRz; \
 				ArrayOfPositionsOfSticks[ARRAY_INDEX] = 13; \
 				std::cout << JState.lRz << " 13"<< std::endl; \
 				break; \
 			} \
-			if (JState.lX != 32767){ \
+			if (JState.lX != zero_sticks_positions[1]){ \
 				ArrayOfValuseOfSticks[ARRAY_INDEX] = JState.lX; \
 				ArrayOfPositionsOfSticks[ARRAY_INDEX] = 14; \
 				std::cout << JState.lX << " 14"<< std::endl; \
 				break; \
 			} \
-			if (JState.lY != 32767){ \
+			if (JState.lY != zero_sticks_positions[2]){ \
 				ArrayOfValuseOfSticks[ARRAY_INDEX] = JState.lY; \
 				ArrayOfPositionsOfSticks[ARRAY_INDEX] = 15; \
 				std::cout << JState.lY << " 15"<< std::endl; \
 				break; \
 			} \
-			if (JState.lZ != 32767){ \
+			if (JState.lZ != zero_sticks_positions[3]){ \
 				ArrayOfValuseOfSticks[ARRAY_INDEX] = JState.lZ; \
 				ArrayOfPositionsOfSticks[ARRAY_INDEX] = 16; \
 				std::cout << JState.lZ << " 16"<< std::endl; \
@@ -143,26 +111,31 @@
 			} \
 		};
 #else
-	// MACROSES
+// MACROSES
 	#define CALIBRATE_BUTTONS(STRING_MESSAGE) \
-	std::cout << "Press and Hold -" << STRING_MESSAGE << "- button" << std::endl; \
-	while(true){ \
-		if (joystick->sample(&event)) \
-		{ \
-			if ( event.isButton() && event.value) \
+		std::cout << "Press and Hold -" << STRING_MESSAGE << "- button" << std::endl; \
+		for (int i=0;i<250;i++){ \
+			if (joystick->sample(&event)) \
 			{ \
-				tempmap[STRING_MESSAGE] = event.number+1; \
-				break; \
+				if ( event.isButton() && event.value) \
+				{ \
+					std::cout << "Success" << std::endl; \
+					tempmap[STRING_MESSAGE] = event.number+1; \
+					break; \
+				} \
 			} \
-		} \
-	}
+			usleep(20000); \
+			if (i==249) { \
+				std::cout << "button not defined" << std::endl; \
+			} \
+		}
 
-	#define CALIBRATE_STICKS(STRING_MESSAGE,AXIS_NAME,ARRAY_INDEX) \
+#define CALIBRATE_STICKS(STRING_MESSAGE,AXIS_NAME,ARRAY_INDEX) \
 	std::cout << STRING_MESSAGE << std::endl; \
   is_not_second_axxis = false; \
   is_min_value = false; \
-  while(true){ \
-    for (int i=0;i<50;i++){ \
+  for (int j=0;j<5;j++){ \
+    for (int i=0;i<100;i++){ \
       if (joystick->sample(&event)){ \
         if (event.isAxis() && event.value) \
         { \
@@ -198,27 +171,34 @@
           } \
         } \
       } \
-      usleep(10000); \
+      usleep(20000); \
     } \
     if (is_not_second_axxis){ \
       long maxofvalues=0; \
-      for (int i=0;i<50;i++){ \
+      for (int i=0;i<100;i++){ \
         if (abs(TempArrayOfValues[i]) > maxofvalues ){ \
           maxofvalues = abs(TempArrayOfValues[i]); \
         } \
       } \
       if (is_min_value) { maxofvalues= maxofvalues*(-1); } \
       ArrayOfValuseOfSticks[ARRAY_INDEX] = maxofvalues; \
-      for (int i=0;i<50;i++){ \
+      for (int i=0;i<100;i++){ \
         TempArrayOfValues[i]=0; \
       } \
+      std::cout << "Success, release Stick" << std::endl; \
       for (int i=0; i<100; i++){\
-        usleep(10000);\
+        usleep(20000);\
         joystick->sample(&event);\
       }\
       break; \
     }\
-  }\
+    tempmap[AXIS_NAME] = 0; \
+    ArrayOfValuseOfSticks[ARRAY_INDEX] = 0; \
+    }; \
+    if (!is_not_second_axxis){ \
+    	std::cout << "Axis not defined" << std::endl; \
+    	usleep(2000000); \
+    } 
 #endif	
 
 int main(int argc, char* argv[]){
@@ -274,7 +254,6 @@ int main(int argc, char* argv[]){
 		return hr;
 	};
 
-	// Óñòàíàâëèâàåì ôîðìàò äàííûõ
 	if (FAILED(hr = joystick->SetDataFormat(&c_dfDIJoystick))){
 		std::cout << "cant Set DATA" << std::endl;
 	}
@@ -283,15 +262,14 @@ int main(int argc, char* argv[]){
 	DIPROPRANGE dipr;
 	DIJOYSTATE JState;
 	ZeroMemory(&JState, sizeof(DIJOYSTATE));
-	// Ñíà÷àëà î÷èùàåì ñòðóêòóðó
 	ZeroMemory(&dipr, sizeof(DIPROPRANGE));
 
 	dipr.diph.dwSize = sizeof(dipr);
 	dipr.diph.dwHeaderSize = sizeof(dipr);
-	// Äëÿ îñè X
+
 	dipr.diph.dwObj = DIJOFS_X;
-	dipr.diph.dwHow = DIPH_BYOFFSET; // Ñìåùåíèå â ôîðìàòå äàííûõ
-	// äèàïàçîí çíà÷åíèé
+	dipr.diph.dwHow = DIPH_BYOFFSET; 
+
 	dipr.lMin = -1024;
 	dipr.lMax = 1024;
 	// Set to X
@@ -300,16 +278,16 @@ int main(int argc, char* argv[]){
 	dipr.diph.dwObj = DIJOFS_Y;
 	joystick->SetProperty(DIPROP_RANGE, &dipr.diph);
 
-	// Óñòàíîâêà ìåðòâîé çîíû
+	
 	DIPROPDWORD dipdw;
 	ZeroMemory(&dipdw, sizeof(DIPROPDWORD));
 
-	dipdw.diph.dwObj = DIJOFS_X; // Îñü X
-	dipdw.dwData = 1000;     // Ïðèáëèçèòåëüíî 10% äèàïàçîíà
+	dipdw.diph.dwObj = DIJOFS_X; 
+	dipdw.dwData = 1000;    
 	// Dead zone to X
 	joystick->SetProperty(DIPROP_DEADZONE, &dipdw.diph);
 	// dead zone to Y
-	dipdw.diph.dwObj = DIJOFS_Y; // Îñü Y
+	dipdw.diph.dwObj = DIJOFS_Y; 
 	joystick->SetProperty(DIPROP_DEADZONE, &dipdw.diph);
 
 
@@ -327,9 +305,7 @@ int main(int argc, char* argv[]){
 	long ArrayOfValuseOfSticks[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 	int ArrayOfPositionsOfSticks[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
-	bool MessageFromThread = false;
-	DWORD dwThreadID1;
-	HANDLE hThread5 = (HANDLE)_beginthreadex(NULL, 0, (unsigned(__stdcall *)(void*)) &ThreadKeyboardScanner, &MessageFromThread, 0, (unsigned *)&dwThreadID1);
+	ZERO_CALIBRATION ("don't touch sticks for 2 seconds");
 
 	CALIBRATE_BUTTONS ("Press and Hold -Exit- button", 0);
 
@@ -360,23 +336,39 @@ int main(int argc, char* argv[]){
 	joystick->Unacquire();	
 #else
 	Joystick *joystick;
-	std::string dev("/dev/input/js1");
-	joystick = new Joystick(dev);
 
-	// Ensure that it was found and that we can use it
-	if (!joystick->isFound())
-	{
-		printf("open failed.\n");
-		return 1;
+	std::string dev("/dev/input/js");
+	for (int i=0; i< 10; i++){
+		std::string tdev = dev + std::to_string(i);
+		std::cout << tdev << " try" << std::endl;
+		joystick = new Joystick(tdev);
+		if (!joystick->isFound())
+		{
+			printf("open failed.\n");
+			return 1;
+		}
+		else {
+			std::cout << "Press any button on gamepad" << std::endl;
+			JoystickEvent event;
+			int countIS=0;
+			while(true){
+				joystick->sample(&event);
+				if (!event.isInitialState()){
+					break;
+				} 
+				usleep(2000);
+				countIS++;
+				if (countIS > 4000){
+					break;
+				}
+			}
+			if (countIS < 4000){
+				break;
+			}
+		}
 	}
-// Прокручиваем все стартовые события они нам не нужны
+
 	JoystickEvent event;
-	while(true){
-		joystick->sample(&event);
-		if (!event.isInitialState()){
-			break;
-		} 
-	}
 
 /// Теперь по порядку просим нажать кнопки и на основе этого будем делать записи в Массив.
 	std::map<std::string, int> tempmap;
@@ -403,8 +395,8 @@ int main(int argc, char* argv[]){
 	bool is_not_second_axxis= false;
 	bool is_min_value = false;
 
-	long TempArrayOfValues[50];
-	for (int i=0;i<50;i++){
+	long TempArrayOfValues[100];
+	for (int i=0;i<100;i++){
 		TempArrayOfValues[i]=0;
 	}
 
@@ -461,6 +453,7 @@ int main(int argc, char* argv[]){
 
 	int countPairs = 0;
 #ifdef _WIN32
+
 	int ArrayOfPositions[18];
 	for (int i = 0; i < 18; i++){
 		if (i < 12)
@@ -478,6 +471,29 @@ int main(int argc, char* argv[]){
 		++i)
 	{
 		ini.Delete("axis", (*i).c_str(), true);
+		
+#ifdef _WIN32		
+		ini.SetValue("axis", (*i).c_str(), std::to_string(ArrayOfPositions[countPairs]).c_str());
+
+		ini.Delete((*i).c_str(), "upper_value", true);
+		ini.Delete((*i).c_str(), "lower_value", true);
+
+		if (countPairs > 0 && countPairs < 12)
+		{
+			ini.SetValue((*i).c_str(), "upper_value", "1");
+			ini.SetValue((*i).c_str(), "lower_value", "0");
+		}
+		else if (countPairs >= 12 && countPairs<16)
+		{ 
+			ini.SetValue((*i).c_str(), "upper_value", std::to_string(ArrayOfValuseOfSticks[(countPairs - 12)*2]).c_str());
+			ini.SetValue((*i).c_str(), "lower_value", std::to_string(ArrayOfValuseOfSticks[(countPairs - 12)*2 +1]).c_str());
+		}
+		else if (countPairs >= 16)
+		{ 
+			ini.SetValue((*i).c_str(), "upper_value", "1");
+			ini.SetValue((*i).c_str(), "lower_value", "-1");
+		}
+#else
 		ini.SetValue("axis", (*i).c_str(), std::to_string(tempmap[(*i)]).c_str());
 
 		ini.Delete((*i).c_str(), "upper_value", true);
@@ -493,7 +509,7 @@ int main(int argc, char* argv[]){
 			ini.SetValue((*i).c_str(), "upper_value", std::to_string(ArrayOfValuseOfSticks[(countPairs - 12)*2]).c_str());
 			ini.SetValue((*i).c_str(), "lower_value", std::to_string(ArrayOfValuseOfSticks[(countPairs - 12)*2 +1]).c_str());
 		}
-
+#endif
 		countPairs++;
 	}
 
@@ -503,7 +519,7 @@ int main(int argc, char* argv[]){
 }
 
 #ifdef _WIN32
-	BOOL CALLBACK callForEnumDevices(LPCDIDEVICEINSsTANCE pdInst, LPVOID pvRef){
+	BOOL CALLBACK callForEnumDevices(LPCDIDEVICEINSTANCE pdInst, LPVOID pvRef){
 		*((GUID *)pvRef) = (pdInst->guidInstance);
 		return DIENUM_STOP;
 	}

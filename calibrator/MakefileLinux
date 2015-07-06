@@ -39,4 +39,5 @@ calibrator.o: calibrator.cpp
 	$(COMPILE.cc) $(FLAGS) -o ${OBJECTDIR}/calibrator.o calibrator.cpp
 
 calibrator: calibrator.o joystick.o
-	${LINK.cc} -m32 -shared ${OBJECTDIR}/calibrator.o ${OBJECTDIR}/joystick.o -o ${OBJECTDIR}/calibrator_$(FILENAME_FIX).so
+	${LINK.cc} -m32  ${OBJECTDIR}/calibrator.o ${OBJECTDIR}/joystick.o -o ${OBJECTDIR}/calibrator_$(FILENAME_FIX).a
+
