@@ -26,6 +26,7 @@
 // GLOBAL_VARIABLES
 #ifdef _WIN32
 	EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+	long zero_sticks_positions[4];
 
 	// Ôóíêöèÿ äëÿ EnumDevices
 	BOOL CALLBACK callForEnumDevices(LPCDIDEVICEINSTANCE pdInst, LPVOID pvRef);
@@ -69,6 +70,18 @@
 
 
 	// MACRO
+	#define ZERO_CALIBRATION(STRING_MESSAGE) \
+		std::cout << STRING_MESSAGE << std::endl; \
+		Sleep(2500); \
+		joystick->Poll(); \
+		joystick->GetDeviceState(sizeof(JState), &JState); \
+		zero_sticks_positions[0] = JState.lRz; \
+		zero_sticks_positions[1] = JState.lX; \
+		zero_sticks_positions[2] = JState.lY; \
+		zero_sticks_positions[3] = JState.lZ; \
+		Sleep(500);
+
+
 	#define CALIBRATE_BUTTONS(STRING_MESSAGE,ARRAY_INDEX) \
 	std::cout << STRING_MESSAGE << std::endl; \
 	while (true) \
@@ -117,25 +130,25 @@
 			joystick->Poll(); \
 			joystick->GetDeviceState(sizeof(JState), &JState); \
 	 \
-			if (JState.lRz != 32767){ \
+			if (JState.lRz != zero_sticks_positions[0]){ \
 				ArrayOfValuseOfSticks[ARRAY_INDEX] = JState.lRz; \
 				ArrayOfPositionsOfSticks[ARRAY_INDEX] = 13; \
 				std::cout << JState.lRz << " 13"<< std::endl; \
 				break; \
 			} \
-			if (JState.lX != 32767){ \
+			if (JState.lX != zero_sticks_positions[1]){ \
 				ArrayOfValuseOfSticks[ARRAY_INDEX] = JState.lX; \
 				ArrayOfPositionsOfSticks[ARRAY_INDEX] = 14; \
 				std::cout << JState.lX << " 14"<< std::endl; \
 				break; \
 			} \
-			if (JState.lY != 32767){ \
+			if (JState.lY != zero_sticks_positions[2]){ \
 				ArrayOfValuseOfSticks[ARRAY_INDEX] = JState.lY; \
 				ArrayOfPositionsOfSticks[ARRAY_INDEX] = 15; \
 				std::cout << JState.lY << " 15"<< std::endl; \
 				break; \
 			} \
-			if (JState.lZ != 32767){ \
+			if (JState.lZ != zero_sticks_positions[3]){ \
 				ArrayOfValuseOfSticks[ARRAY_INDEX] = JState.lZ; \
 				ArrayOfPositionsOfSticks[ARRAY_INDEX] = 16; \
 				std::cout << JState.lZ << " 16"<< std::endl; \
@@ -218,7 +231,7 @@
       }\
       break; \
     }\
-  }\
+    };
 #endif	
 
 int main(int argc, char* argv[]){
@@ -330,6 +343,8 @@ int main(int argc, char* argv[]){
 	bool MessageFromThread = false;
 	DWORD dwThreadID1;
 	HANDLE hThread5 = (HANDLE)_beginthreadex(NULL, 0, (unsigned(__stdcall *)(void*)) &ThreadKeyboardScanner, &MessageFromThread, 0, (unsigned *)&dwThreadID1);
+
+	ZERO_CALIBRATION ("don't touch sticks for 2 seconds");
 
 	CALIBRATE_BUTTONS ("Press and Hold -Exit- button", 0);
 
@@ -461,6 +476,7 @@ int main(int argc, char* argv[]){
 
 	int countPairs = 0;
 #ifdef _WIN32
+
 	int ArrayOfPositions[18];
 	for (int i = 0; i < 18; i++){
 		if (i < 12)
@@ -478,6 +494,29 @@ int main(int argc, char* argv[]){
 		++i)
 	{
 		ini.Delete("axis", (*i).c_str(), true);
+		
+#ifdef _WIN32		
+		ini.SetValue("axis", (*i).c_str(), std::to_string(ArrayOfPositions[countPairs]).c_str());
+
+		ini.Delete((*i).c_str(), "upper_value", true);
+		ini.Delete((*i).c_str(), "lower_value", true);
+
+		if (countPairs > 0 && countPairs < 12)
+		{
+			ini.SetValue((*i).c_str(), "upper_value", "1");
+			ini.SetValue((*i).c_str(), "lower_value", "0");
+		}
+		else if (countPairs >= 12 && countPairs<16)
+		{ 
+			ini.SetValue((*i).c_str(), "upper_value", std::to_string(ArrayOfValuseOfSticks[(countPairs - 12)*2]).c_str());
+			ini.SetValue((*i).c_str(), "lower_value", std::to_string(ArrayOfValuseOfSticks[(countPairs - 12)*2 +1]).c_str());
+		}
+		else if (countPairs >= 16)
+		{ 
+			ini.SetValue((*i).c_str(), "upper_value", "1");
+			ini.SetValue((*i).c_str(), "lower_value", "-1");
+		}
+#else
 		ini.SetValue("axis", (*i).c_str(), std::to_string(tempmap[(*i)]).c_str());
 
 		ini.Delete((*i).c_str(), "upper_value", true);
@@ -493,7 +532,7 @@ int main(int argc, char* argv[]){
 			ini.SetValue((*i).c_str(), "upper_value", std::to_string(ArrayOfValuseOfSticks[(countPairs - 12)*2]).c_str());
 			ini.SetValue((*i).c_str(), "lower_value", std::to_string(ArrayOfValuseOfSticks[(countPairs - 12)*2 +1]).c_str());
 		}
-
+#endif
 		countPairs++;
 	}
 
@@ -503,7 +542,7 @@ int main(int argc, char* argv[]){
 }
 
 #ifdef _WIN32
-	BOOL CALLBACK callForEnumDevices(LPCDIDEVICEINSsTANCE pdInst, LPVOID pvRef){
+	BOOL CALLBACK callForEnumDevices(LPCDIDEVICEINSTANCE pdInst, LPVOID pvRef){
 		*((GUID *)pvRef) = (pdInst->guidInstance);
 		return DIENUM_STOP;
 	}
