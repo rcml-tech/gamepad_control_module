@@ -6,7 +6,7 @@ CXX=g++
 SIMPLEINI_DIR = "/var/lib/jenkins/workspace/RCML_build/simpleini/
 JOYSTICK_DIR = /home/jenkins/joystick
 
-INCLUDE_DIR_FLAGS = -I${SIMPLEINI_DIR}
+INCLUDE_DIR_FLAGS = -I${SIMPLEINI_DIR} -I${JOYSTICK_DIR}
 
 FLAGS_MUTUAL = -Wall -m32 -std=c++11 ${INCLUDE_DIR_FLAGS} -MMD -MP -MF "${OBJECTDIR}/$@.d"
 
