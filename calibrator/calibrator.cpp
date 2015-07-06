@@ -159,69 +159,66 @@
 
 	#define CALIBRATE_STICKS(STRING_MESSAGE,AXIS_NAME,ARRAY_INDEX) \
 	std::cout << STRING_MESSAGE << std::endl; \
-	try { \
-		while(true){ \
-			for (int i=0;i<50;i++){ \
-				if (joystick->sample(&event)){ \
-					if (event.isAxis() && event.value) \
-					{ \
-						switch(event.number) \
-						{ \
-							case 0: \
-							case 1: \
-							{ \
-								if (event.value < 0) { is_min_value=true; } \
-								is_not_second_axxis = true; \
-								if (!tempmap.count(AXIS_NAME)) \
-								{ \
-									tempmap[AXIS_NAME] = event.number + 13; \
-								} \
-								TempArrayOfValues[i] = event.value; \
-							} \
-							case 3: \
-							case 4: \
-							case 5: \
-							case 6: \
-							{ \
-								is_not_second_axxis = true; \
-								if (event.value < 0) { is_min_value=true; } \
-								if (!tempmap.count(AXIS_NAME)) \
-								{ \
-									tempmap[AXIS_NAME] = event.number + 12; \
-								} \
-								TempArrayOfValues[i] = event.value; \
-							} \
-							default:{ break; } \
-						} \
-					} \
-				} \
-				usleep(10000); \
-			} \
-			if (is_not_second_axxis){ \
-				long maxofvalues=0; \
-				for (int i=0;i<50;i++){ \
-					if (abs(TempArrayOfValues[i]) > maxofvalues ){ \
-						maxofvalues = abs(TempArrayOfValues[i]); \
-					} \
-				} \
-				if (is_min_value) { maxofvalues= maxofvalues*(-1); } \
-				ArrayOfValuseOfSticks[ARRAY_INDEX] = maxofvalues; \
-				for (int i=0;i<50;i++){ \
-					TempArrayOfValues[i]=0; \
-				} \
-				throw std::exception(); \
-			}\
-		}\
-	}\
-	catch (...) \
-	{\
-		for (int i=0; i<100; i++){\
-			usleep(10000);\
-			joystick->sample(&event);\
-		}\
-		is_min_value = false; \
-		is_not_second_axxis = false; \
-	} 
+  is_not_second_axxis = false; \
+  is_min_value = false; \
+  while(true){ \
+    for (int i=0;i<50;i++){ \
+      if (joystick->sample(&event)){ \
+        if (event.isAxis() && event.value) \
+        { \
+          switch(event.number) \
+          { \
+            case 0: \
+            case 1: \
+            { \
+              is_not_second_axxis = true; \
+              if (event.value < 0) { is_min_value=true; } \
+              if (!tempmap.count(AXIS_NAME)) \
+              { \
+                tempmap[AXIS_NAME] = event.number + 13; \
+              } \
+              TempArrayOfValues[i] = event.value; \
+              break; \
+            } \
+            case 3: \
+            case 4: \
+            case 5: \
+            case 6: \
+            { \
+              is_not_second_axxis = true; \
+              if (event.value < 0) { is_min_value=true; } \
+              if (!tempmap.count(AXIS_NAME)) \
+              { \
+                tempmap[AXIS_NAME] = event.number + 12; \
+              } \
+              TempArrayOfValues[i] = event.value; \
+              break; \
+            } \
+            default:{ break; } \
+          } \
+        } \
+      } \
+      usleep(10000); \
+    } \
+    if (is_not_second_axxis){ \
+      long maxofvalues=0; \
+      for (int i=0;i<50;i++){ \
+        if (abs(TempArrayOfValues[i]) > maxofvalues ){ \
+          maxofvalues = abs(TempArrayOfValues[i]); \
+        } \
+      } \
+      if (is_min_value) { maxofvalues= maxofvalues*(-1); } \
+      ArrayOfValuseOfSticks[ARRAY_INDEX] = maxofvalues; \
+      for (int i=0;i<50;i++){ \
+        TempArrayOfValues[i]=0; \
+      } \
+      for (int i=0; i<100; i++){\
+        usleep(10000);\
+        joystick->sample(&event);\
+      }\
+      break; \
+    }\
+  }\
 #endif	
 
 int main(int argc, char* argv[]){
