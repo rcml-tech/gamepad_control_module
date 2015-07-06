@@ -9,7 +9,7 @@ JOYSTICK_DIR = /home/jenkins/joystick
 
 INCLUDE_DIR_FLAGS = -I${MODULE_HEADERS_DIR} -I${SIMPLEINI_DIR}
 
-FLAGS_MUTUAL = -Wall -m32 -std=c++11 -fPIC ${INCLUDE_DIR_FLAGS} -MMD -MP -MF "${OBJECTDIR}/$@.d"
+FLAGS_MUTUAL = -Wall -m32 -std=c++11 ${INCLUDE_DIR_FLAGS} -MMD -MP -MF "${OBJECTDIR}/$@.d"
 
 .PHONY: debug
 
