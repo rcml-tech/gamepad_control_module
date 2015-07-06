@@ -305,12 +305,9 @@ void GamepadControlModule::execute(sendAxisState_t sendAxisState) {
 }
 
 
-void GamepadControlModule::prepare(colorPrintf_t *colorPrintf_p, colorPrintfVA_t *colorPrintfVA_p) {
+void GamepadControlModule::prepare(colorPrintfModule_t *colorPrintf_p, colorPrintfModuleVA_t *colorPrintfVA_p) {
 	srand(time(NULL));
 	this->colorPrintf_p = colorPrintfVA_p;
-
-	int axis_id = 0;
-	Gamepad_axis = new AxisData*[COUNT_AXIS];
 
 #ifdef _WIN32
 	WCHAR DllPath[MAX_PATH] = { 0 };
@@ -360,9 +357,9 @@ void GamepadControlModule::prepare(colorPrintf_t *colorPrintf_p, colorPrintfVA_t
 	InputDevice.assign(tempInput);
 #endif
 
+	int axis_id = 1;
 	CSimpleIniA::TNamesDepend axis_names_ini;
 	ini.GetAllKeys("axis", axis_names_ini);
-	axis_id++;
 	for (
 		CSimpleIniA::TNamesDepend::const_iterator i = axis_names_ini.begin();
 		i != axis_names_ini.end();

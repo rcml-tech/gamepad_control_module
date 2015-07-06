@@ -17,14 +17,14 @@ class GamepadControlModule : public ControlModule {
 	std::string InputDevice;
 #endif
 
-	colorPrintfVA_t *colorPrintf_p;
+	colorPrintfModuleVA_t *colorPrintf_p;
 
 public:
 	GamepadControlModule(){};
 
 	//init
 	const char *getUID();
-	void prepare(colorPrintf_t *colorPrintf_p, colorPrintfVA_t *colorPrintfVA_p);
+	void prepare(colorPrintfModule_t *colorPrintf_p, colorPrintfModuleVA_t *colorPrintfVA_p);
 
 	//compiler only
 	AxisData** getAxis(unsigned int *count_axis);
