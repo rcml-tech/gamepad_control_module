@@ -28,7 +28,7 @@
 	EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 	long zero_sticks_positions[4];
 
-	// Ôóíêöèÿ äëÿ EnumDevices
+	// EnumDevices
 	BOOL CALLBACK callForEnumDevices(LPCDIDEVICEINSTANCE pdInst, LPVOID pvRef);
 
 	// MACRO
@@ -46,7 +46,7 @@
 
 	#define CALIBRATE_BUTTONS(STRING_MESSAGE,ARRAY_INDEX) \
 	std::cout << STRING_MESSAGE << std::endl; \
-	for (int j=0;j<2500;j++) \
+	for (int j=0;j<300;j++) \
 	{ \
 		joystick->Poll(); \
 		joystick->GetDeviceState(sizeof(JState), &JState); \
@@ -81,7 +81,6 @@
 		std::cout << STRING_MESSAGE << std::endl; \
 		for (int j=0;j<7;j++)  \
 		{ \
-	 \
 			Sleep(1000); \
 			joystick->Poll(); \
 			joystick->GetDeviceState(sizeof(JState), &JState); \
