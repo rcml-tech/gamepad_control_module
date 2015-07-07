@@ -24,14 +24,15 @@
 #include <SimpleIni.h>
 #include "gamepad_control_module.h"
 
-// All buttons
+// Global Variables
 #ifdef _WIN32
 	long long Button_previous_state[18] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 	long zero_sticks_positions[4];
 	long long zero_arrows_positions;
-	int exit_gamepad_axxis_number = 0;
 	EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 #endif
+int exit_gamepad_axxis_number = 0;
+
 
 inline const char *copyStrValue(const char *source) {
 	char *dest = new char[strlen(source) + 1];
@@ -217,11 +218,11 @@ void GamepadControlModule::execute(sendAxisState_t sendAxisState) {
 					case 10:
 					case 11:
 					{
-						if (axis_bind_map.count(event.number+1)){
-							if (axis_bind_map[event.number+1] == "Exit" &&  event.value){
+						if (gamepad_axis_bind_to_module_axis.count(event.number+1)){
+							if ( event.number+1 == exit_gamepad_axxis_number &&  event.value){
 								return;
 							}
-							(*sendAxisState)(axis_names[axis_bind_map[event.number+1]], event.value);
+							(*sendAxisState)(gamepad_axis_bind_to_module_axis[event.number+1], event.value);
 						}
 						break;
 					}
@@ -234,8 +235,8 @@ void GamepadControlModule::execute(sendAxisState_t sendAxisState) {
 					case 0:
 					case 1:
 					{
-						if (axis_bind_map.count(event.number + 13)){
-							(*sendAxisState)(axis_names[axis_bind_map[event.number + 13]], event.value);
+						if (gamepad_axis_bind_to_module_axis.count(event.number + 13)){
+							(*sendAxisState)(gamepad_axis_bind_to_module_axis[event.number + 13], event.value);
 						}
 						break;
 					}
@@ -244,8 +245,8 @@ void GamepadControlModule::execute(sendAxisState_t sendAxisState) {
 					case 5:
 					case 6:
 					{
-						if (axis_bind_map.count(event.number + 12)){
-							(*sendAxisState)(axis_names[axis_bind_map[event.number + 12]], event.value);
+						if (gamepad_axis_bind_to_module_axis.count(event.number + 12)){
+							(*sendAxisState)(gamepad_axis_bind_to_module_axis[event.number + 12], event.value);
 						}
 						break;
 					}
