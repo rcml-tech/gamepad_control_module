@@ -27,12 +27,13 @@
 #ifdef _WIN32
 	EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 	long zero_sticks_positions[4];
+	long long zero_arrows_positions;
 
 	// EnumDevices
 	BOOL CALLBACK callForEnumDevices(LPCDIDEVICEINSTANCE pdInst, LPVOID pvRef);
 
 	// MACRO
-	#define ZERO_CALIBRATION(STRING_MESSAGE) \
+#define ZERO_CALIBRATION(STRING_MESSAGE) \
 		std::cout << STRING_MESSAGE << std::endl; \
 		Sleep(2500); \
 		joystick->Poll(); \
@@ -41,6 +42,7 @@
 		zero_sticks_positions[1] = JState.lX; \
 		zero_sticks_positions[2] = JState.lY; \
 		zero_sticks_positions[3] = JState.lZ; \
+		zero_arrows_positions = JState.rgdwPOV[0]; \
 		Sleep(500);
 
 
@@ -333,10 +335,10 @@ int main(int argc, char* argv[]){
 	joystick->Unacquire();	
 #else
 	Joystick *joystick;
-
+	std::string tdev;
 	std::string dev("/dev/input/js");
 	for (int i=0; i< 10; i++){
-		std::string tdev = dev + std::to_string(i);
+		tdev = dev + std::to_string(i);
 		std::cout << tdev << " try" << std::endl;
 		joystick = new Joystick(tdev);
 		if (!joystick->isFound())
@@ -443,7 +445,20 @@ int main(int argc, char* argv[]){
 	{
 		ini.Delete("axis", (*i).c_str(), true);
 		
-#ifdef _WIN32		
+#ifdef _WIN32	
+
+		ini.Delete("stick_zero_positions", "axis_1", true);
+		ini.Delete("stick_zero_positions", "axis_2", true);
+		ini.Delete("stick_zero_positions", "axis_3", true);
+		ini.Delete("stick_zero_positions", "axis_4", true);
+		ini.Delete("stick_zero_positions", "arrows", true);
+
+		ini.SetValue("stick_zero_positions", "axis_1", std::to_string(zero_sticks_positions[0]).c_str());
+		ini.SetValue("stick_zero_positions", "axis_2", std::to_string(zero_sticks_positions[1]).c_str());
+		ini.SetValue("stick_zero_positions", "axis_3", std::to_string(zero_sticks_positions[2]).c_str());
+		ini.SetValue("stick_zero_positions", "axis_4", std::to_string(zero_sticks_positions[3]).c_str());
+		ini.SetValue("stick_zero_positions", "arrows", std::to_string(zero_arrows_positions).c_str());
+
 		ini.SetValue("axis", (*i).c_str(), std::to_string(ArrayOfPositions[countPairs]).c_str());
 
 		ini.Delete((*i).c_str(), "upper_value", true);
@@ -465,6 +480,9 @@ int main(int argc, char* argv[]){
 			ini.SetValue((*i).c_str(), "lower_value", "-1");
 		}
 #else
+		ini.Delete("options","input_path", true);
+		ini.SetValue("options","input_path",tdev.c_str());
+
 		ini.SetValue("axis", (*i).c_str(), std::to_string(tempmap[(*i)]).c_str());
 
 		ini.Delete((*i).c_str(), "upper_value", true);
