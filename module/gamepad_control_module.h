@@ -5,8 +5,7 @@
 class GamepadControlModule : public ControlModule {
 	AxisData **Gamepad_axis;
 
-	std::map<std::string, system_value> axis_names;
-	std::map<int, std::string> axis_bind_map;
+	std::map<int, int> gamepad_axis_bind_to_module_axis;
 	std::map<system_value, AxisData*> axis;
 
 	unsigned int COUNT_AXIS;

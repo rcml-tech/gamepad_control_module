@@ -24,26 +24,14 @@
 #include <SimpleIni.h>
 #include "gamepad_control_module.h"
 
-// All buttons
+// Global Variables
 #ifdef _WIN32
-	bool is_Button_was_changed[18] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+	long long Button_previous_state[18] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+	long zero_sticks_positions[4];
+	long long zero_arrows_positions;
 	EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 #endif
-
-// MACROSES
-#ifdef _WIN32
-	#define SEND_BUTTON_CHANGE(index_of_button)\
-	if (JState.rgbButtons[index_of_button] != 0){\
-	(*sendAxisState)(index_of_button + 1, 1);\
-	is_Button_was_changed[index_of_button] = true;\
-	}\
-	else {\
-		if (is_Button_was_changed[index_of_button]){\
-			(*sendAxisState)(index_of_button + 1, 0);\
-			is_Button_was_changed[index_of_button] = false;\
-		}\
-	}
-#endif
+int exit_gamepad_axxis_number = 0;
 
 
 inline const char *copyStrValue(const char *source) {
@@ -66,242 +54,211 @@ void GamepadControlModule::execute(sendAxisState_t sendAxisState) {
 	if (FAILED(hr = joystick->Acquire())) {
 		return;
 	}
-	try {
-		while (true) {
-			joystick->Poll();
-			joystick->GetDeviceState(sizeof(JState), &JState);
-			for (auto i = axis_bind_map.begin(); i != axis_bind_map.end(); i++){
-				switch (i->first)
-				{
-				case 1:
-				case 2:
-				case 3:
-				case 4:
-				case 5:
-				case 6:
-				case 7:
-				case 8:
-				case 9:
-				case 10:
-				case 11:
-				case 12: // binary axis
-				{
-					if (JState.rgbButtons[i->first - 1] != 0 && i->second=="Exit"){
-						throw std::exception();
-					}
-					if (JState.rgbButtons[i->first - 1] != 0){
-						(*sendAxisState)(axis_names[i->second], axis[axis_names[i->second]]->upper_value);
-						is_Button_was_changed[i->first - 1] = true;
-					}
-					else {
-						if (is_Button_was_changed[i->first - 1]){
-							(*sendAxisState)(axis_names[i->second], axis[axis_names[i->second]]->lower_value);
-							is_Button_was_changed[i->first - 1] = false;
-						}
-					}
-					break;
-				}
-				case 13: // .lRz
-				{
-					if (JState.lRz != 32767){
-						(*sendAxisState)(axis_names[i->second], JState.lRz);
-						is_Button_was_changed[i->first - 1] = true;
+
+	Button_previous_state[12] = zero_sticks_positions[0];
+	Button_previous_state[13] = zero_sticks_positions[1];
+	Button_previous_state[14] = zero_sticks_positions[2];
+	Button_previous_state[15] = zero_sticks_positions[3];
+	Button_previous_state[16] = zero_arrows_positions;
+	Button_previous_state[17] = zero_arrows_positions;
+
+	while (true) {
+		joystick->Poll();
+		joystick->GetDeviceState(sizeof(JState), &JState);
+		for (auto i = gamepad_axis_bind_to_module_axis.begin(); i != gamepad_axis_bind_to_module_axis.end(); i++){
+			switch (i->first)
+			{
+			case 1:
+			case 2:
+			case 3:
+			case 4:
+			case 5:
+			case 6:
+			case 7:
+			case 8:
+			case 9:
+			case 10:
+			case 11:
+			case 12: // binary axis
+			{
+				if (JState.rgbButtons[i->first - 1] != Button_previous_state[i->first - 1]){
+					if (i->first == exit_gamepad_axxis_number) { return; }
+					if (JState.rgbButtons[i->first - 1]){
+						(*sendAxisState)(i->second, axis[i->second]->upper_value);
 					}
 					else {
-						if (is_Button_was_changed[i->first - 1]){
-							(*sendAxisState)(axis_names[i->second], 32767);
-							is_Button_was_changed[i->first - 1] = false;
-						}
+						(*sendAxisState)(i->second, axis[i->second]->lower_value);
 					}
-					break;
+					Button_previous_state[i->first - 1] = JState.rgbButtons[i->first - 1];
 				}
-				case 14: // .lX
-				{
-					if (JState.lX != 32767){
-						(*sendAxisState)(axis_names[i->second], JState.lX);
-						is_Button_was_changed[i->first - 1] = true;
-					}
-					else {
-						if (is_Button_was_changed[i->first - 1]){
-							(*sendAxisState)(axis_names[i->second], 32767);
-							is_Button_was_changed[i->first - 1] = false;
-						}
-					}
-					break;
+				break;
+			}
+			case 13: // .lRz
+			{
+				if (JState.lRz != Button_previous_state[i->first - 1]){
+					(*sendAxisState)(i->second, JState.lRz);
+					Button_previous_state[i->first - 1] = JState.lRz;
 				}
-				case 15: // .lY
-				{
-					if (JState.lY != 32767){
-						(*sendAxisState)(axis_names[i->second], JState.lY);
-						is_Button_was_changed[i->first - 1] = true;
-					}
-					else {
-						if (is_Button_was_changed[i->first - 1]){
-							(*sendAxisState)(axis_names[i->second], 32767);
-							is_Button_was_changed[i->first - 1] = false;
-						}
-					}
-					break;
+				break;
+			}
+			case 14: // .lX
+			{
+				if (JState.lX != Button_previous_state[i->first - 1]){
+					(*sendAxisState)(i->second, JState.lX);
+					Button_previous_state[i->first - 1] = JState.lX;
 				}
-				case 16: // .lZ
-				{
-					if (JState.lZ != 32767){
-						(*sendAxisState)(axis_names[i->second], JState.lZ);
-						is_Button_was_changed[i->first - 1] = true;
-					}
-					else {
-						if (is_Button_was_changed[i->first - 1]){
-							(*sendAxisState)(axis_names[i->second], 32767);
-							is_Button_was_changed[i->first - 1] = false;
-						}
-					}
-					break;
+				break;
+			}
+			case 15: // .lY
+			{
+				if (JState.lY != Button_previous_state[i->first - 1]){
+					(*sendAxisState)(i->second, JState.lY);
+					Button_previous_state[i->first - 1] = JState.lY;
 				}
-				case 17:{ // Arrows UD
-					if (JState.rgdwPOV[0] != 4294967295){
-						switch (JState.rgdwPOV[0]){
-						case 0:
-						case 4500:
-						case 4500 * 7:{
-							(*sendAxisState)(axis_names[i->second], 1);
-							is_Button_was_changed[i->first - 1] = true;
-							break;
-						}
-						case 3 * 4500:
-						case 4 * 4500:
-						case 5 * 4500:{
-							(*sendAxisState)(axis_names[i->second], -1);
-							is_Button_was_changed[i->first - 1] = true;
-							break;
-						}
-						default:{break; }
-						}
-					}
-					else {
-						if (is_Button_was_changed[i->first - 1]){
-							(*sendAxisState)(axis_names[i->second], 0);
-							is_Button_was_changed[i->first - 1] = false;
-						}
-					}
-					break;
+				break;
+			}
+			case 16: // .lZ
+			{
+				if (JState.lZ != Button_previous_state[i->first - 1]){
+					(*sendAxisState)(i->second, JState.lZ);
+					Button_previous_state[i->first - 1] = JState.lZ;
 				}
-				case 18:{ // Arrows LR
-					if (JState.rgdwPOV[0] != 4294967295){
-						switch (JState.rgdwPOV[0]){
-						case 4500:
-						case 2 * 4500:
-						case 3 * 4500:{
-							(*sendAxisState)(axis_names[i->second], 1);
-							is_Button_was_changed[i->first - 1] = true;
-							break;
-						}
-						case 5 * 4500:
-						case 6 * 4500:
-						case 7 * 4500:{
-							(*sendAxisState)(axis_names[i->second], -1);
-							is_Button_was_changed[i->first - 1] = true;
-							break;
-						}
-						default:{ break; }
-						}
+				break;
+			}
+			case 17:{ // Arrows UD
+				if (JState.rgdwPOV[0] != Button_previous_state[i->first - 1]){
+					switch (JState.rgdwPOV[0]){
+					case 0:
+					case 4500:
+					case 4500 * 7:{
+						(*sendAxisState)(i->second, 1);
+						Button_previous_state[i->first - 1] = JState.rgdwPOV[0];
+						break;
 					}
-					else {
-						if (is_Button_was_changed[i->first - 1]){
-							(*sendAxisState)(axis_names[i->second], 0);
-							is_Button_was_changed[i->first - 1] = false;
-						}
+					case 3 * 4500:
+					case 4 * 4500:
+					case 5 * 4500:{
+						(*sendAxisState)(i->second, -1);
+						Button_previous_state[i->first - 1] = JState.rgdwPOV[0];
+						break;
 					}
-					break;
+					default:{break;}
+					}
+					if (JState.rgdwPOV[0] ==  zero_arrows_positions) {
+						(*sendAxisState)(i->second, 0);
+						Button_previous_state[i->first - 1] = JState.rgdwPOV[0];
+					}
+
 				}
-				default:
-					break;
+				break;
+			}
+			case 18:{ // Arrows LR
+				if (JState.rgdwPOV[0] != Button_previous_state[i->first - 1]){
+					switch (JState.rgdwPOV[0]){
+					case 4500:
+					case 2 * 4500:
+					case 3 * 4500:{
+						(*sendAxisState)(i->second, 1);
+						Button_previous_state[i->first - 1] = JState.rgdwPOV[0];
+						break;
+					}
+					case 5 * 4500:
+					case 6 * 4500:
+					case 7 * 4500:{
+						(*sendAxisState)(i->second, -1);
+						Button_previous_state[i->first - 1] = JState.rgdwPOV[0];
+						break;
+					}
+					default:{break; }
+					}
+					if (JState.rgdwPOV[0] == zero_arrows_positions) {
+						(*sendAxisState)(i->second, 0);
+						Button_previous_state[i->first - 1] = JState.rgdwPOV[0];
+					}
 				}
+				break;
+			}
+			default:
+				break;
 			}
 		}
 	}
-	catch (...){}
 	joystick->Unacquire();
 #else
-	try{
-		JoystickEvent event;
-		while(true){
-			joystick->sample(&event);
-			if (!event.isInitialState()){
-				break;
-			} 
-		}
+	JoystickEvent event;
+	while(true){
+		joystick->sample(&event);
+		if (!event.isInitialState()){
+			break;
+		} 
+	}
 
-		while (true)
+	while (true)
+	{
+		// Restrict rate
+		usleep(1000);
+
+		// Attempt to sample an event from the joystick
+		if (joystick->sample(&event))
 		{
-			// Restrict rate
-			usleep(1000);
 
-			// Attempt to sample an event from the joystick
-			if (joystick->sample(&event))
+			if (event.isButton())
 			{
-
-				if (event.isButton())
-				{
-					switch(event.number){
-						case 0:
-						case 1:
-						case 2:
-						case 3:
-						case 4:
-						case 5:
-						case 6:
-						case 7:
-						case 8:
-						case 9:						
-						case 10:
-						case 11:
-						{
-							if (axis_bind_map.count(event.number+1)){
-								if (axis_bind_map[event.number+1] == "Exit" &&  event.value){
-									throw std::exception();
-								}
-								(*sendAxisState)(axis_names[axis_bind_map[event.number+1]], event.value);
+				switch(event.number){
+					case 0:
+					case 1:
+					case 2:
+					case 3:
+					case 4:
+					case 5:
+					case 6:
+					case 7:
+					case 8:
+					case 9:						
+					case 10:
+					case 11:
+					{
+						if (gamepad_axis_bind_to_module_axis.count(event.number+1)){
+							if ( event.number+1 == exit_gamepad_axxis_number &&  event.value){
+								return;
 							}
-							break;
+							(*sendAxisState)(gamepad_axis_bind_to_module_axis[event.number+1], event.value);
 						}
-						default:{ break;}
+						break;
 					}
-			    }
-				else if (event.isAxis())
-				{
-					switch(event.number){
-						case 0:
-						case 1:
-						{
-							if (axis_bind_map.count(event.number + 13)){
-								(*sendAxisState)(axis_names[axis_bind_map[event.number + 13]], event.value);
-							}
-							break;
+					default:{ break;}
+				}
+			}
+			else if (event.isAxis())
+			{
+				switch(event.number){
+					case 0:
+					case 1:
+					{
+						if (gamepad_axis_bind_to_module_axis.count(event.number + 13)){
+							(*sendAxisState)(gamepad_axis_bind_to_module_axis[event.number + 13], event.value);
 						}
-						case 3:
-						case 4:
-						case 5:
-						case 6:
-						{
-							if (axis_bind_map.count(event.number + 12)){
-								(*sendAxisState)(axis_names[axis_bind_map[event.number + 12]], event.value);
-							}
-							break;
-						}
-						default:{ break;}
+						break;
 					}
-			    }
+					case 3:
+					case 4:
+					case 5:
+					case 6:
+					{
+						if (gamepad_axis_bind_to_module_axis.count(event.number + 12)){
+							(*sendAxisState)(gamepad_axis_bind_to_module_axis[event.number + 12], event.value);
+						}
+						break;
+					}
+					default:{ break;}
+				}
 			}
 		}
-
 	}
-	catch(...){}
 #endif
 }
 
-
 void GamepadControlModule::prepare(colorPrintfModule_t *colorPrintf_p, colorPrintfModuleVA_t *colorPrintfVA_p) {
-	srand(time(NULL));
 	this->colorPrintf_p = colorPrintfVA_p;
 
 #ifdef _WIN32
@@ -350,6 +307,13 @@ void GamepadControlModule::prepare(colorPrintfModule_t *colorPrintf_p, colorPrin
 		return;
 	}
 	InputDevice.assign(tempInput);
+#else
+	zero_sticks_positions[0] = ini.GetLongValue("stick_zero_positions", "axis_1", 0);
+	zero_sticks_positions[1] = ini.GetLongValue("stick_zero_positions", "axis_2", 0);
+	zero_sticks_positions[2] = ini.GetLongValue("stick_zero_positions", "axis_3", 0);
+	zero_sticks_positions[3] = ini.GetLongValue("stick_zero_positions", "axis_4", 0);
+	std::string temp_str = ini.GetValue("stick_zero_positions", "arrows", " 4294967295");
+	zero_arrows_positions = std::stoll(temp_str);
 #endif
 
 	int axis_id = 1;
@@ -365,10 +329,12 @@ void GamepadControlModule::prepare(colorPrintfModule_t *colorPrintf_p, colorPrin
 
 		if (temp){
 			std::string col_axis(i->pItem);
-			std::pair<int, std::string> tempPair(temp, col_axis);
-			axis_bind_map.insert(tempPair);
 
-			axis_names[col_axis] = axis_id;
+			if (col_axis =="Exit" ){
+				exit_gamepad_axxis_number = temp;
+			}
+			gamepad_axis_bind_to_module_axis[temp] = axis_id;
+
 			axis[axis_id] = new AxisData();
 			axis[axis_id]->axis_index = axis_id;
 			axis[axis_id]->name = copyStrValue(col_axis.c_str());
@@ -476,9 +442,6 @@ void GamepadControlModule::destroy() {
 		delete Gamepad_axis[j];
 	}
 	delete[] Gamepad_axis;
-#ifndef _WIN32
-	//delete joystick;
-#endif
 	delete this;
 
 }
