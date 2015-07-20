@@ -48,7 +48,7 @@
 
 	#define CALIBRATE_BUTTONS(STRING_MESSAGE,ARRAY_INDEX) \
 	std::cout << STRING_MESSAGE << std::endl; \
-	for (int j=0;j<300;j++) \
+	for (int j=0;j<tacts_buttons;j++) \
 	{ \
 		joystick->Poll(); \
 		joystick->GetDeviceState(sizeof(JState), &JState); \
@@ -69,7 +69,7 @@
 			ArrayOfBytesOfButtons[ARRAY_INDEX] = button_byte_position;\
 			break;\
 		}\
-		Sleep(20); \
+		Sleep(10); \
 	}\
 	std::cout << ArrayOfBytesOfButtons[ARRAY_INDEX] << std::endl;\
 	Sleep(500);
@@ -78,7 +78,7 @@
 
 	#define CALIBRATE_STICKS(STRING_MESSAGE,ARRAY_INDEX) \
 		std::cout << STRING_MESSAGE << std::endl; \
-		for (int j=0;j<7;j++)  \
+		for (int j=0;j<tacts_sticks;j++)  \
 		{ \
 			Sleep(1000); \
 			joystick->Poll(); \
@@ -113,7 +113,7 @@
 // MACROSES
 	#define CALIBRATE_BUTTONS(STRING_MESSAGE) \
 		std::cout << "Press and Hold -" << STRING_MESSAGE << "- button" << std::endl; \
-		for (int i=0;i<250;i++){ \
+		for (int i=0;i<tacts_buttons;i++){ \
 			if (joystick->sample(&event)) \
 			{ \
 				if ( event.isButton() && event.value) \
@@ -124,7 +124,7 @@
 				} \
 			} \
 			usleep(20000); \
-			if (i==249) { \
+			if (i==tacts_buttons-1) { \
 				std::cout << "button not defined" << std::endl; \
 			} \
 		}
@@ -133,7 +133,7 @@
 	std::cout << STRING_MESSAGE << std::endl; \
   is_not_second_axxis = false; \
   is_min_value = false; \
-  for (int j=0;j<5;j++){ \
+  for (int j=0;j<tacts_sticks;j++){ \
     for (int i=0;i<100;i++){ \
       if (joystick->sample(&event)){ \
         if (event.isAxis() && event.value) \
@@ -276,7 +276,6 @@ int main(int argc, char* argv[]){
 	// Set to Y
 	dipr.diph.dwObj = DIJOFS_Y;
 	joystick->SetProperty(DIPROP_RANGE, &dipr.diph);
-
 	
 	DIPROPDWORD dipdw;
 	ZeroMemory(&dipdw, sizeof(DIPROPDWORD));
@@ -289,7 +288,6 @@ int main(int argc, char* argv[]){
 	dipdw.diph.dwObj = DIJOFS_Y; 
 	joystick->SetProperty(DIPROP_DEADZONE, &dipdw.diph);
 
-
 	if (FAILED(hr = joystick->Acquire())) {
 		std::cout << hr << std::endl;
 		std::cout << S_FALSE << " " << DI_OK << std::endl;
@@ -298,7 +296,14 @@ int main(int argc, char* argv[]){
 		return hr;
 	}
 
-
+	int tacts_buttons=400;
+	int tacts_sticks=7;
+	
+	if (argc>1){
+		tacts_buttons = atoi(argv[1]);
+		tacts_sticks = (tacts_buttons / 1000) + 1;
+		tacts_buttons = (tacts_buttons / 10) + 1;
+	}
 	////////
 	int ArrayOfBytesOfButtons[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
 	long ArrayOfValuseOfSticks[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -371,6 +376,15 @@ int main(int argc, char* argv[]){
 
 /// Теперь по порядку просим нажать кнопки и на основе этого будем делать записи в Массив.
 	std::map<std::string, int> tempmap;
+
+	int tacts_buttons=400;
+	int tacts_sticks=5;
+
+	if (argc>1){
+		tacts_buttons = atoi(argv[1]);
+		tacts_sticks = (tacts_buttons / 2000) + 1;
+		tacts_buttons = (tacts_buttons / 10) + 1;
+	}
 
 	CALIBRATE_BUTTONS ("Exit");
 
