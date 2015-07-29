@@ -84,10 +84,10 @@ void GamepadControlModule::execute(sendAxisState_t sendAxisState) {
 				if (JState.rgbButtons[i->first - 1] != Button_previous_state[i->first - 1]){
 					if (i->first == exit_gamepad_axxis_number) { return; }
 					if (JState.rgbButtons[i->first - 1]){
-						(*sendAxisState)(i->second, axis[i->second]->upper_value);
+						(*sendAxisState)(this, i->second, axis[i->second]->upper_value);
 					}
 					else {
-						(*sendAxisState)(i->second, axis[i->second]->lower_value);
+						(*sendAxisState)(this, i->second, axis[i->second]->lower_value);
 					}
 					Button_previous_state[i->first - 1] = JState.rgbButtons[i->first - 1];
 				}
@@ -96,7 +96,7 @@ void GamepadControlModule::execute(sendAxisState_t sendAxisState) {
 			case 13: // .lRz
 			{
 				if (JState.lRz != Button_previous_state[i->first - 1]){
-					(*sendAxisState)(i->second, JState.lRz);
+					(*sendAxisState)(this, i->second, JState.lRz);
 					Button_previous_state[i->first - 1] = JState.lRz;
 				}
 				break;
@@ -104,7 +104,7 @@ void GamepadControlModule::execute(sendAxisState_t sendAxisState) {
 			case 14: // .lX
 			{
 				if (JState.lX != Button_previous_state[i->first - 1]){
-					(*sendAxisState)(i->second, JState.lX);
+					(*sendAxisState)(this, i->second, JState.lX);
 					Button_previous_state[i->first - 1] = JState.lX;
 				}
 				break;
@@ -112,7 +112,7 @@ void GamepadControlModule::execute(sendAxisState_t sendAxisState) {
 			case 15: // .lY
 			{
 				if (JState.lY != Button_previous_state[i->first - 1]){
-					(*sendAxisState)(i->second, JState.lY);
+					(*sendAxisState)(this, i->second, JState.lY);
 					Button_previous_state[i->first - 1] = JState.lY;
 				}
 				break;
@@ -120,7 +120,7 @@ void GamepadControlModule::execute(sendAxisState_t sendAxisState) {
 			case 16: // .lZ
 			{
 				if (JState.lZ != Button_previous_state[i->first - 1]){
-					(*sendAxisState)(i->second, JState.lZ);
+					(*sendAxisState)(this, i->second, JState.lZ);
 					Button_previous_state[i->first - 1] = JState.lZ;
 				}
 				break;
@@ -131,21 +131,21 @@ void GamepadControlModule::execute(sendAxisState_t sendAxisState) {
 					case 0:
 					case 4500:
 					case 4500 * 7:{
-						(*sendAxisState)(i->second, 1);
+						(*sendAxisState)(this, i->second, 1);
 						Button_previous_state[i->first - 1] = JState.rgdwPOV[0];
 						break;
 					}
 					case 3 * 4500:
 					case 4 * 4500:
 					case 5 * 4500:{
-						(*sendAxisState)(i->second, -1);
+						(*sendAxisState)(this, i->second, -1);
 						Button_previous_state[i->first - 1] = JState.rgdwPOV[0];
 						break;
 					}
 					default:{break;}
 					}
 					if (JState.rgdwPOV[0] ==  zero_arrows_positions) {
-						(*sendAxisState)(i->second, 0);
+						(*sendAxisState)(this, i->second, 0);
 						Button_previous_state[i->first - 1] = JState.rgdwPOV[0];
 					}
 
@@ -158,21 +158,21 @@ void GamepadControlModule::execute(sendAxisState_t sendAxisState) {
 					case 4500:
 					case 2 * 4500:
 					case 3 * 4500:{
-						(*sendAxisState)(i->second, 1);
+						(*sendAxisState)(this, i->second, 1);
 						Button_previous_state[i->first - 1] = JState.rgdwPOV[0];
 						break;
 					}
 					case 5 * 4500:
 					case 6 * 4500:
 					case 7 * 4500:{
-						(*sendAxisState)(i->second, -1);
+						(*sendAxisState)(this, i->second, -1);
 						Button_previous_state[i->first - 1] = JState.rgdwPOV[0];
 						break;
 					}
 					default:{break; }
 					}
 					if (JState.rgdwPOV[0] == zero_arrows_positions) {
-						(*sendAxisState)(i->second, 0);
+						(*sendAxisState)(this, i->second, 0);
 						Button_previous_state[i->first - 1] = JState.rgdwPOV[0];
 					}
 				}
@@ -222,7 +222,7 @@ void GamepadControlModule::execute(sendAxisState_t sendAxisState) {
 							if ( event.number+1 == exit_gamepad_axxis_number &&  event.value){
 								return;
 							}
-							(*sendAxisState)(gamepad_axis_bind_to_module_axis[event.number+1], event.value);
+							(*sendAxisState)(this, gamepad_axis_bind_to_module_axis[event.number+1], event.value);
 						}
 						break;
 					}
@@ -236,7 +236,7 @@ void GamepadControlModule::execute(sendAxisState_t sendAxisState) {
 					case 1:
 					{
 						if (gamepad_axis_bind_to_module_axis.count(event.number + 13)){
-							(*sendAxisState)(gamepad_axis_bind_to_module_axis[event.number + 13], event.value);
+							(*sendAxisState)(this, gamepad_axis_bind_to_module_axis[event.number + 13], event.value);
 						}
 						break;
 					}
@@ -246,7 +246,7 @@ void GamepadControlModule::execute(sendAxisState_t sendAxisState) {
 					case 6:
 					{
 						if (gamepad_axis_bind_to_module_axis.count(event.number + 12)){
-							(*sendAxisState)(gamepad_axis_bind_to_module_axis[event.number + 12], event.value);
+							(*sendAxisState)(this, gamepad_axis_bind_to_module_axis[event.number + 12], event.value);
 						}
 						break;
 					}
