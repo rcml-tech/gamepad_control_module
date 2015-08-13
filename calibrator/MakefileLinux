@@ -1,0 +1,43 @@
+# Environment
+CCC=g++
+CXX=g++
+
+# Constants
+SIMPLEINI_DIR = /var/lib/jenkins/workspace/RCML_build/simpleini/
+JOYSTICK_DIR = /home/jenkins/joystick
+
+INCLUDE_DIR_FLAGS = -I${SIMPLEINI_DIR} -I${JOYSTICK_DIR}
+
+FLAGS_MUTUAL = -Wall -m32 -std=c++11 ${INCLUDE_DIR_FLAGS} -MMD -MP -MF "${OBJECTDIR}/$@.d"
+
+.PHONY: debug
+
+debug: OBJECTDIR = build/Debug
+debug: FLAGS = -g ${FLAGS_MUTUAL}
+debug: FILENAME_FIX = debug
+debug: clean calibrator
+
+release: OBJECTDIR = build/Release
+release: FLAGS = -O3 ${FLAGS_MUTUAL}
+release: FILENAME_FIX = release
+release: clean calibrator
+
+clean:
+	@echo "-------------------------" 
+	rm -rf ${OBJECTDIR}
+
+joystick.o: ${JOYSTICK_DIR}/joystick.cc
+	@echo "-------------------------" 
+	mkdir -p ${OBJECTDIR}
+	rm -f "${OBJECTDIR}/$@.d"
+	$(COMPILE.cc) $(FLAGS) -o ${OBJECTDIR}/joystick.o ${JOYSTICK_DIR}/joystick.cc
+
+calibrator.o: calibrator.cpp
+	@echo "-------------------------" 
+	mkdir -p ${OBJECTDIR}
+	rm -f "${OBJECTDIR}/$@.d"
+	$(COMPILE.cc) $(FLAGS) -o ${OBJECTDIR}/calibrator.o calibrator.cpp
+
+calibrator: calibrator.o joystick.o
+	${LINK.cc} -m32  ${OBJECTDIR}/calibrator.o ${OBJECTDIR}/joystick.o -o ${OBJECTDIR}/calibrator_$(FILENAME_FIX).a
+
