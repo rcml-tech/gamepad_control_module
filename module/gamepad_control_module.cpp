@@ -25,6 +25,8 @@
 #include "gamepad_control_module.h"
 
 // Global Variables
+#define IID "RCT.Gamepad_control_module_v100"
+
 #ifdef _WIN32
 long long Button_previous_state[18] = {0, 0, 0, 0, 0, 0, 0, 0, 0,
                                        0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -46,6 +48,16 @@ BOOL CALLBACK callForEnumDevices(LPCDIDEVICEINSTANCE pdInst, LPVOID pvRef) {
   return DIENUM_STOP;
 }
 #endif
+
+GamepadControlModule::GamepadControlModule() : is_error_init(false){
+#ifndef CONTROL_MODULE_H_000
+  mi = new ModuleInfo;
+  mi->uid = IID;
+  mi->mode = ModuleInfo::Modes::PROD;
+  mi->version = BUILD_NUMBER;
+  mi->digest = NULL;
+#endif
+};
 
 void GamepadControlModule::execute(sendAxisState_t sendAxisState) {
 // srand(time(NULL));
@@ -434,9 +446,11 @@ int GamepadControlModule::init() {
   return 0;
 }
 
-const char *GamepadControlModule::getUID() {
-  return "Gamepad control module 1";
-}
+#ifdef CONTROL_MODULE_H_000
+const char *GamepadControlModule::getUID() { return IID; }
+#else
+const struct ModuleInfo &GamepadControlModule::getModuleInfo() { return *mi; }
+#endif
 
 AxisData **GamepadControlModule::getAxis(unsigned int *count_axis) {
   (*count_axis) = COUNT_AXIS;
@@ -444,6 +458,9 @@ AxisData **GamepadControlModule::getAxis(unsigned int *count_axis) {
 }
 
 void GamepadControlModule::destroy() {
+#ifndef CONTROL_MODULE_H_000
+  delete mi;
+#endif
   for (unsigned int j = 0; j < COUNT_AXIS; ++j) {
     delete Gamepad_axis[j];
   }
@@ -469,6 +486,12 @@ void GamepadControlModule::colorPrintf(ConsoleColor colors, const char *mask,
   (*colorPrintf_p)(this, colors, mask, args);
   va_end(args);
 }
+
+#ifndef CONTROL_MODULE_H_000
+PREFIX_FUNC_DLL unsigned short getControlModuleApiVersion() {
+  return CONTROL_MODULE_API_VERSION;
+};
+#endif
 
 PREFIX_FUNC_DLL ControlModule *getControlModuleObject() {
   return new GamepadControlModule();

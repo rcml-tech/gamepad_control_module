@@ -21,11 +21,19 @@ class GamepadControlModule : public ControlModule {
 
   colorPrintfModuleVA_t *colorPrintf_p;
 
+#ifndef CONTROL_MODULE_H_000
+  ModuleInfo *mi;
+#endif
+
  public:
-  GamepadControlModule() : is_error_init(false){};
+  GamepadControlModule();
 
   // init
+#ifdef CONTROL_MODULE_H_000
   const char *getUID();
+#else
+  const struct ModuleInfo &getModuleInfo();
+#endif
   void prepare(colorPrintfModule_t *colorPrintf_p,
                colorPrintfModuleVA_t *colorPrintfVA_p);
 
