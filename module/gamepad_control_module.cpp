@@ -12,6 +12,7 @@
 
 #ifdef _WIN32
 #include <dinput.h>
+#include "build_number.h"
 #else
 #include <unistd.h>
 #include <fcntl.h>
