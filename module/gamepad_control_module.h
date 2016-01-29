@@ -22,7 +22,7 @@ class GamepadControlModule : public ControlModule {
   colorPrintfModuleVA_t *colorPrintf_p;
 
  public:
-  GamepadControlModule() : is_error_init(false){};
+  GamepadControlModule() : Gamepad_axis(NULL), COUNT_AXIS(0), is_error_init(false){};
 
   // init
   const char *getUID();
