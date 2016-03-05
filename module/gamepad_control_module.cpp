@@ -480,7 +480,7 @@ void GamepadControlModule::colorPrintf(ConsoleColor colors, const char *mask,
 }
 
 PREFIX_FUNC_DLL unsigned short getControlModuleApiVersion() {
-  return CONTROL_MODULE_API_VERSION;
+  return MODULE_API_VERSION;
 };
 
 PREFIX_FUNC_DLL ControlModule *getControlModuleObject() {
