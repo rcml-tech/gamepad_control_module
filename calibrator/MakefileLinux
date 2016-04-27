@@ -3,7 +3,7 @@ CCC=g++
 CXX=g++
 
 # Constants
-SIMPLEINI_DIR = /var/lib/jenkins/workspace/RCML_build/simpleini/
+SIMPLEINI_DIR = /var/lib/jenkins/workspace/simpleini
 JOYSTICK_DIR = /home/jenkins/joystick
 
 INCLUDE_DIR_FLAGS = -I${SIMPLEINI_DIR} -I${JOYSTICK_DIR}
