@@ -3,7 +3,7 @@ CCC=g++
 CXX=g++
 
 # Constants
-SIMPLEINI_DIR = ../../../libraries/3rdparty/simpleini
+SIMPLEINI_DIR = ../../../../libraries/3rdparty/simpleini
 JOYSTICK_DIR = /home/jenkins/joystick
 
 INCLUDE_DIR_FLAGS = -I${SIMPLEINI_DIR} -I${JOYSTICK_DIR}

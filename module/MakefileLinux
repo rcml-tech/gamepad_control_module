@@ -3,8 +3,8 @@ CCC=g++
 CXX=g++
 
 # Constants
-MODULE_HEADERS_DIR = ../../../libraries/public/module_headers/100
-SIMPLEINI_DIR = ../../../libraries/3rdparty/simpleini
+MODULE_HEADERS_DIR = ../../../../libraries/public/module_headers/100
+SIMPLEINI_DIR = ../../../../libraries/3rdparty/simpleini
 JOYSTICK_DIR = /home/jenkins/joystick
 
 INCLUDE_DIR_FLAGS = -I${MODULE_HEADERS_DIR} -I${SIMPLEINI_DIR} -I${JOYSTICK_DIR}
